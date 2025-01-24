@@ -1,8 +1,8 @@
 #include <iostream>
 #include <cstdlib>
-#include <windows.h>
 #include <utility>
 #include <vector>
+#include <unistd.h>
 
 void initialize_glider(bool **field, int height, int width)
 {
@@ -102,8 +102,9 @@ int main(int argc, char **argv)
     {
         draw_game_field(field, height, width);
         update_game_field(field, height, width);
-        Sleep(100);
-        system("cls");
+        usleep(100000);
+        printf("\033[2J");
+        printf("\033[H");
     }
     return 0;
 }
