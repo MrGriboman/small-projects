@@ -1,7 +1,5 @@
 #include <iostream>
 #include <cstdlib>
-#include <utility>
-#include <vector>
 #include <unistd.h>
 
 void initialize_glider(bool **field, int height, int width)
@@ -28,43 +26,52 @@ void initialize_glider(bool **field, int height, int width)
 
 void update_game_field(bool **field, int height, int width)
 {
-    std::vector<std::pair<int, int>> dead_cels;
-    std::vector<std::pair<int, int>> born_cels;
+    bool **next_field = new bool *[height];
+    for (int i = 0; i < height; ++i)
+    {
+        next_field[i] = new bool[width]();
+    }
+
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
         {
             int cells_alive = 0;
-            for (int k = i - 1; k <= i + 1; k++)
+
+            for (int k = -1; k <= 1; k++)
             {
-                for (int l = j - 1; l <= j + 1; l++)
+                for (int l = -1; l <= 1; l++)
                 {
-                    int cur_height = (k >= 0 && k < height) ? k : ((k < 0) ? height - (-k % height) : 0 + (k % height));
-                    int cur_width = (l >= 0 && l < width) ? l : ((l < 0) ? width - (-l % width) : 0 + (l % width));
+                    if (k == 0 && l == 0)
+                        continue; // Skip the current cell
+
+                    int cur_height = (i + k + height) % height;
+                    int cur_width = (j + l + width) % width;
+
                     cells_alive += field[cur_height][cur_width];
                 }
             }
-            cells_alive -= field[i][j];
-            if (field[i][j] && (cells_alive < 2 || cells_alive > 3))
+
+            if (field[i][j]) // Cell is alive
             {
-                dead_cels.push_back(std::make_pair(i, j));
+                next_field[i][j] = (cells_alive == 2 || cells_alive == 3);
             }
-            else if (!field[i][j] && cells_alive == 3)
+            else // Cell is dead
             {
-                born_cels.push_back(std::make_pair(i, j));
+                next_field[i][j] = (cells_alive == 3);
             }
         }
     }
-    for (auto it = dead_cels.begin(); it != dead_cels.end(); ++it)
+
+    for (int i = 0; i < height; ++i)
     {
-        std::pair<int, int> indices = *it;
-        field[indices.first][indices.second] = 0;
+        for (int j = 0; j < width; ++j)
+        {
+            field[i][j] = next_field[i][j];
+        }
+        delete[] next_field[i];
     }
-    for (auto it = born_cels.begin(); it != born_cels.end(); ++it)
-    {
-        std::pair<int, int> indices = *it;
-        field[indices.first][indices.second] = 1;
-    }
+    delete[] next_field;
 }
 
 void draw_game_field(bool **field, int height, int width)
